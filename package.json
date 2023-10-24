@@ -20,5 +20,10 @@
   "dependencies": {
     "csv-stringify": "^6.4.4",
     "fs": "^0.0.1-security"
+  },
+  "devDependencies": {
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-node-externals": "^3.0.0"
   }
 }
