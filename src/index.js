@@ -1,28 +1,6 @@
 import { stringify } from 'csv-stringify';
 import fs from 'fs';
 
-//  "tasks": [
-//    {
-//      "categoryName": "organization",
-//      "tasks": [                          
-//        {                                 
-//          "title": "daily review",        
-//          "frequency": "daily",
-//          "when": ""
-//        },
-//        {
-//          "title": "weekly review",
-//          "frequency": "weekly",
-//          "when": ""
-//        },
-//        {
-//          "title": "create new checklist",
-//          "frequency": "monthly",
-//          "when": ""
-//        }
-//      ]
-//    },
-
 // TODO rename vars ... lots of ugly names
 
 function isLeapYear(year) {
@@ -58,13 +36,17 @@ function generateMonthDatesAndDays(month, year, daysInMonth) {
 }
 
 
-// TODO add conditional logic for node as argv[0] or not
 // TODO usage if you fail to supply arguments
-// assumes you run this as node index.js <month> <year>
+// assumes you run this as node index.js <month> <year> </path/to/json>
+// or executable.js <month> <year> </path/to/json>
+
+// TODO proveout -- will this work added to /bin?
+
+
 const month = process.argv[2]
 const year = process.argv[3]
+const jsonData = process.argv[4]
 
-// THIS IS WRONG
 const monthStringToNumber = (month) => {
   switch (month) {
   case 'january':
@@ -94,8 +76,6 @@ const monthStringToNumber = (month) => {
   }
 }
 
-//console.log(generateMonthDatesAndDays(monthStringToNumber(month), year, getDaysInMonth(year, monthStringToNumber(month))))
-
 let emptyRow = []
 
 // n + 5 columns where n is # of days in month
@@ -103,6 +83,7 @@ for (let i = 0; i < (getDaysInMonth(year, monthStringToNumber(month)) + 5); i++)
   emptyRow.push('')
 }
 
+// a header row
 let r1 = emptyRow.slice()
 r1[0] = 'task'
 r1[1] = 'frequency'
@@ -110,6 +91,7 @@ r1[r1.length - 1] = month.slice(0, 3) + ' ' + year.toString().slice(2)
 
 let r2 = emptyRow.slice()
 
+// rows with date and day of week
 let r3 = emptyRow.slice()
 let r4 = emptyRow.slice()
 let datesAndDays = generateMonthDatesAndDays(monthStringToNumber(month), year, getDaysInMonth(year, monthStringToNumber(month)))
@@ -120,14 +102,11 @@ for (let i = 0; i < getDaysInMonth(year, monthStringToNumber(month)); i++) {
 
 let r5 = emptyRow.slice()
 
-// console.log([r1, r2, r3, r4, r5])
+const checklistData = JSON.parse(fs.readFileSync(jsonData, 'utf8'));
 
-const checklistData = JSON.parse(fs.readFileSync('./checklist.json', 'utf8'));
-
+// remaining rows from checklist json
 let formattedChecklistData = [r1, r2, r3, r4, r5]
 
-
-// TODO make this handle when!
 checklistData.tasks.forEach((category) => {
 
   let categoryRow = emptyRow.slice()
@@ -147,5 +126,3 @@ checklistData.tasks.forEach((category) => {
 })
 
 stringify(formattedChecklistData).pipe(process.stdout)
-
-
