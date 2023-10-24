@@ -40,10 +40,7 @@ function generateMonthDatesAndDays(month, year, daysInMonth) {
 // assumes you run this as node index.js <month> <year> </path/to/json>
 // or executable.js <month> <year> </path/to/json>
 
-// TODO proveout -- will this work added to /bin?
-
-
-const month = process.argv[2]
+const monthString = process.argv[2]
 const year = process.argv[3]
 const jsonData = process.argv[4]
 
@@ -76,10 +73,14 @@ const monthStringToNumber = (month) => {
   }
 }
 
+const month = monthStringToNumber(monthString)
+const daysInMonth = getDaysInMonth(year, month)
+const datesAndDays = generateMonthDatesAndDays(month, year, daysInMonth)
+
 let emptyRow = []
 
 // n + 5 columns where n is # of days in month
-for (let i = 0; i < (getDaysInMonth(year, monthStringToNumber(month)) + 5); i++) {
+for (let i = 0; i < (daysInMonth + 5); i++) {
   emptyRow.push('')
 }
 
@@ -87,15 +88,14 @@ for (let i = 0; i < (getDaysInMonth(year, monthStringToNumber(month)) + 5); i++)
 let r1 = emptyRow.slice()
 r1[0] = 'task'
 r1[1] = 'frequency'
-r1[r1.length - 1] = month.slice(0, 3) + ' ' + year.toString().slice(2)
+r1[r1.length - 1] = monthString.slice(0, 3) + ' ' + year.toString().slice(2)
 
 let r2 = emptyRow.slice()
 
 // rows with date and day of week
 let r3 = emptyRow.slice()
 let r4 = emptyRow.slice()
-let datesAndDays = generateMonthDatesAndDays(monthStringToNumber(month), year, getDaysInMonth(year, monthStringToNumber(month)))
-for (let i = 0; i < getDaysInMonth(year, monthStringToNumber(month)); i++) {
+for (let i = 0; i < daysInMonth; i++) {
   r3[i+3] = datesAndDays[i].date
   r4[i+3] = datesAndDays[i].day
 }
@@ -105,6 +105,7 @@ let r5 = emptyRow.slice()
 const checklistData = JSON.parse(fs.readFileSync(jsonData, 'utf8'));
 
 // remaining rows from checklist json
+// TODO consider adding support for a list of month names in the json
 let formattedChecklistData = [r1, r2, r3, r4, r5]
 
 checklistData.tasks.forEach((category) => {
@@ -114,7 +115,7 @@ checklistData.tasks.forEach((category) => {
 
   formattedChecklistData.push(categoryRow)
   category.tasks.forEach((task) => {
-    if (task.when === month || task.when === '') {
+    if (task.when === monthString || task.when === '') {
       let taskRow = emptyRow.slice()
       taskRow[0] = task.title
       taskRow[1] = task.frequency
