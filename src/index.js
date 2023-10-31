@@ -115,7 +115,7 @@ checklistData.tasks.forEach((category) => {
 
   formattedChecklistData.push(categoryRow)
   category.tasks.forEach((task) => {
-    if (task.when === monthString || task.when === '') {
+    if (!task.when.length || task.when.includes(monthString)) {
       let taskRow = emptyRow.slice()
       taskRow[0] = task.title
       taskRow[1] = task.frequency

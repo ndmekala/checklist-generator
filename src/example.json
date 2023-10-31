@@ -6,12 +6,12 @@
         {
           "title": "daily review",
           "frequency": "daily",
-          "when": ""
+          "when": []
         },
         {
           "title": "weekly review",
           "frequency": "weekly",
-          "when": "october"
+          "when": ["october", "may"]
         }
       ]
     }
