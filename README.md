@@ -13,11 +13,8 @@ You can then pipe the `stdout` wherever you’d like, but probably to something 
 
 ## Development
 
-- Just clone the repo and run `npm install`!
+- Clone the repo and run `npm install`
 
-## Deployment
+## Installation
 
-- Run `npx webpack`
-- Copy `bundle.js` to the location of your choice
-- Add a line with `#!/usr/bin/env node` to the top of the file
-- Make executable with `chmod u+x bundle.js`
+- Run `build-and-install`

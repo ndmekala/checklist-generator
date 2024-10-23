@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# get the path of the user's bin folder
+USER_BIN_PATH="$HOME/bin"
+
+echo "Building…"
+npx webpack
+
+echo "Installing to $USER_BIN_PATH"
+
+if [ ! -d "$USER_BIN_PATH" ]; then
+    mkdir -p "$USER_BIN_PATH"
+fi
+
+if [ -f "$USER_BIN_PATH/checklist-generator" ]; then
+    rm "$USER_BIN_PATH/checklist-generator"
+fi
+
+(echo "#!/usr/bin/env node"; cat ./dist/bundle.js) > tmp
+chmod u+x tmp
+mv tmp "$USER_BIN_PATH/checklist-generator"
+echo "Install to $USER_BIN_PATH complete"
