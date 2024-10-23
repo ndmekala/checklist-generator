@@ -46,13 +46,14 @@ function generateMonthDatesAndDays(month, year, daysInMonth) {
   return dateObjects;
 }
 
-// TODO usage if you fail to supply arguments
-// assumes you run this as node index.js <month> <year> </path/to/json>
-// or executable.js <month> <year> </path/to/json>
-
 const monthString = process.argv[2];
 const year = process.argv[3];
 const jsonData = process.argv[4];
+
+if (!monthString || !year || !jsonData) {
+  console.log('Usage: checklist-generator <month> <year> </path/to/json>');
+  process.exit(1);
+}
 
 const monthStringToNumber = (month) => {
   switch (month) {
