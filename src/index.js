@@ -1,138 +1,81 @@
 const { stringify } = require('csv-stringify');
 const fs = require('fs');
 
-// TODO rename vars ... lots of ugly names
+// Parse command line arguments
+// const monthString = process.argv[2];
+// const year = process.argv[3];
+const generationDateArg = process.argv[2]
+const jsonData = process.argv[3];
 
-function isLeapYear(year) {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
-function getDaysInMonth(year, month) {
-  // Months are 0-based in JavaScript, so January is 0, February is 1, and so on.
-  const daysInMonth = [
-    31,
-    isLeapYear(year) ? 29 : 28,
-    31,
-    30,
-    31,
-    30,
-    31,
-    31,
-    30,
-    31,
-    30,
-    31,
-  ];
-
-  return daysInMonth[month];
-}
-
-function generateMonthDatesAndDays(month, year, daysInMonth) {
-  const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
-
-  const dateObjects = [];
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    const dayOfWeek = date.getDay(); // 0 (Sunday) to 6 (Saturday)
-    const dayName = daysOfWeek[dayOfWeek];
-
-    dateObjects.push({
-      date: day,
-      day: dayName,
-    });
-  }
-
-  return dateObjects;
-}
-
-const monthString = process.argv[2];
-const year = process.argv[3];
-const jsonData = process.argv[4];
-
-if (!monthString || !year || !jsonData) {
-  console.log('Usage: checklist-generator <month> <year> </path/to/json>');
+if (!generationDateArg || !jsonData) {
+  console.log('Usage: checklist-generator <YYYY-MM-DD> </path/to/json>');
   process.exit(1);
 }
 
-const monthStringToNumber = (month) => {
-  switch (month) {
-    case 'january':
-      return 0;
-    case 'february':
-      return 1;
-    case 'march':
-      return 2;
-    case 'april':
-      return 3;
-    case 'may':
-      return 4;
-    case 'june':
-      return 5;
-    case 'july':
-      return 6;
-    case 'august':
-      return 7;
-    case 'september':
-      return 8;
-    case 'october':
-      return 9;
-    case 'november':
-      return 10;
-    case 'december':
-      return 11;
-  }
-};
+// Convert month name to month number
+const generationDate = new Date(generationDateArg)
+const month = generationDate.getMonth();
+const year = generationDate.getFullYear().toString();
+const monthString = generationDate.toLocaleString('en-US', { month: 'long' }).toLowerCase()
 
-const month = monthStringToNumber(monthString);
-const daysInMonth = getDaysInMonth(year, month);
-const datesAndDays = generateMonthDatesAndDays(month, year, daysInMonth);
+// Get the number of days in the month
+const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-let emptyRow = [];
+// Generate dates and corresponding day names
+const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
+const datesAndDays = Array.from({ length: daysInMonth }, (_, day) => {
+  const date = new Date(year, month, day + 1);
+  const dayOfWeek = date.getDay();
+  return {
+    date: day + 1,
+    day: daysOfWeek[dayOfWeek],
+  };
+});
 
-// n + 5 columns where n is # of days in month
-for (let i = 0; i < daysInMonth + 5; i++) {
-  emptyRow.push('');
-}
+// Prepare the empty row for CSV
+let emptyRow = Array(daysInMonth + 5).fill('');
 
-// a header row
-let r1 = emptyRow.slice();
+// Create header row
+let r1 = [...emptyRow];
 r1[0] = 'task';
 r1[1] = 'frequency';
-r1[r1.length - 1] = monthString.slice(0, 3) + ' ' + year.toString().slice(2);
+r1[r1.length - 1] = `${monthString.slice(0, 3)} ${year.slice(-2)}`;
 
-let r2 = emptyRow.slice();
+// Create rows for date and day
+let r3 = [...emptyRow];
+let r4 = [...emptyRow];
+datesAndDays.forEach((dateInfo, i) => {
+  r3[i + 3] = dateInfo.date;
+  r4[i + 3] = dateInfo.day;
+});
 
-// rows with date and day of week
-let r3 = emptyRow.slice();
-let r4 = emptyRow.slice();
-for (let i = 0; i < daysInMonth; i++) {
-  r3[i + 3] = datesAndDays[i].date;
-  r4[i + 3] = datesAndDays[i].day;
-}
+// Remaining empty row
+let r5 = [...emptyRow];
 
-let r5 = emptyRow.slice();
-
+// Read checklist data from JSON
 const checklistData = JSON.parse(fs.readFileSync(jsonData, 'utf8'));
 
-// remaining rows from checklist json
-// TODO consider adding support for a list of month names in the json
-let formattedChecklistData = [r1, r2, r3, r4, r5];
+// Format checklist data
+let formattedChecklistData = [r1, [...emptyRow], r3, r4, r5];
 
 checklistData.tasks.forEach((category) => {
-  let categoryRow = emptyRow.slice();
+  let categoryRow = [...emptyRow];
   categoryRow[0] = category.categoryName;
-
   formattedChecklistData.push(categoryRow);
+
   category.tasks.forEach((task) => {
     if (!task.when.length || task.when.includes(monthString)) {
-      let taskRow = emptyRow.slice();
+      let taskRow = [...emptyRow];
       taskRow[0] = task.title;
       taskRow[1] = task.frequency;
       formattedChecklistData.push(taskRow);
     }
   });
-  formattedChecklistData.push(emptyRow.slice());
+
+  // Add empty row after each category
+  formattedChecklistData.push([...emptyRow]);
 });
 
+// Convert to CSV and output
 stringify(formattedChecklistData).pipe(process.stdout);
+
