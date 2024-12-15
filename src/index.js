@@ -28,21 +28,25 @@ const datesAndDays = Array.from({ length: daysInMonth }, (_, day) => {
   };
 });
 
+const NON_DATE_COLUMNS = 4 // task, empty, empty, date/empty
+const TASK_COLUMN_INDEX = 0 // first item
+const DATE_COLUMN_L_SPACING = 2 // task, empty
+
 // Prepare the empty row for CSV
-let emptyRow = Array(daysInMonth + 5).fill('');
+let emptyRow = Array(daysInMonth + NON_DATE_COLUMNS).fill('');
 
 // Create header row
 let r1 = [...emptyRow];
-r1[0] = 'task';
-r1[1] = 'frequency';
+r1[TASK_COLUMN_INDEX] = 'task';
+//r1[1] = 'frequency';
 r1[r1.length - 1] = `${monthString.slice(0, 3)} ${year.slice(-2)}`;
 
 // Create rows for date and day
 let r3 = [...emptyRow];
 let r4 = [...emptyRow];
 datesAndDays.forEach((dateInfo, i) => {
-  r3[i + 3] = dateInfo.date;
-  r4[i + 3] = dateInfo.day;
+  r3[i + DATE_COLUMN_L_SPACING] = dateInfo.date;
+  r4[i + DATE_COLUMN_L_SPACING] = dateInfo.day;
 });
 
 
@@ -54,14 +58,14 @@ let formattedChecklistData = [r1, [...emptyRow], r3, r4, [...emptyRow]];
 
 checklistData.tasks.forEach((category) => {
   let categoryRow = [...emptyRow];
-  categoryRow[0] = category.categoryName;
+//  categoryRow[0] = category.categoryName;
   formattedChecklistData.push(categoryRow);
 
   category.tasks.forEach((task) => {
     if (!task.when.length || task.when.includes(monthString)) {
       let taskRow = [...emptyRow];
-      taskRow[0] = task.title;
-      taskRow[1] = task.frequency;
+      taskRow[TASK_COLUMN_INDEX] = task.title;
+//      taskRow[1] = task.frequency;
       formattedChecklistData.push(taskRow);
     }
   });
