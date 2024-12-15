@@ -69,15 +69,16 @@ const html = `
 <!DOCTYPE html>
 <html>
 <head>
-<title>Page Title</title>
+  <title>Page Title</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
   <table>${formattedChecklistData.map((row, index) => {
   return '<tr>' + row.map((cell) => {
     if (index === 0) {
-      return '<th>' + cell + '</th>'
+      return '<th class="p-4">' + cell + '</th>'
     } else {
-      return '<td>' + cell + '</td>'
+      return '<td class="p-4 text-fuchsia-500">' + cell + '</td>'
     }
   }).join('') + '</tr>'
 }).join('')}</table>
