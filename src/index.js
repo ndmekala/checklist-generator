@@ -2,8 +2,6 @@ const { stringify } = require('csv-stringify');
 const fs = require('fs');
 
 // Parse command line arguments
-// const monthString = process.argv[2];
-// const year = process.argv[3];
 const generationDateArg = process.argv[2]
 const jsonData = process.argv[3];
 
@@ -12,13 +10,11 @@ if (!generationDateArg || !jsonData) {
   process.exit(1);
 }
 
-// Convert month name to month number
+// Prepare date constants
 const generationDate = new Date(generationDateArg)
 const month = generationDate.getMonth();
 const year = generationDate.getFullYear().toString();
 const monthString = generationDate.toLocaleString('en-US', { month: 'long' }).toLowerCase()
-
-// Get the number of days in the month
 const daysInMonth = new Date(year, month + 1, 0).getDate();
 
 // Generate dates and corresponding day names
@@ -49,14 +45,12 @@ datesAndDays.forEach((dateInfo, i) => {
   r4[i + 3] = dateInfo.day;
 });
 
-// Remaining empty row
-let r5 = [...emptyRow];
 
 // Read checklist data from JSON
 const checklistData = JSON.parse(fs.readFileSync(jsonData, 'utf8'));
 
 // Format checklist data
-let formattedChecklistData = [r1, [...emptyRow], r3, r4, r5];
+let formattedChecklistData = [r1, [...emptyRow], r3, r4, [...emptyRow]];
 
 checklistData.tasks.forEach((category) => {
   let categoryRow = [...emptyRow];
@@ -78,4 +72,3 @@ checklistData.tasks.forEach((category) => {
 
 // Convert to CSV and output
 stringify(formattedChecklistData).pipe(process.stdout);
-
