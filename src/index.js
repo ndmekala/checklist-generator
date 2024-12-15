@@ -63,5 +63,29 @@ checklistData.tasks.forEach((task) => {
   }
 });
 
+
+
+const html = `
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+</head>
+<body>
+  <table>${formattedChecklistData.map((row, index) => {
+  return '<tr>' + row.map((cell) => {
+    if (index === 0) {
+      return '<th>' + cell + '</th>'
+    } else {
+      return '<td>' + cell + '</td>'
+    }
+  }).join('') + '</tr>'
+}).join('')}</table>
+</body>
+</html>`
+
+
+console.log(html)
+
 // Convert to CSV and output
-stringify(formattedChecklistData).pipe(process.stdout);
+//stringify(formattedChecklistData).pipe(process.stdout);
