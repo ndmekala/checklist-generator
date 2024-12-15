@@ -38,7 +38,6 @@ let emptyRow = Array(daysInMonth + NON_DATE_COLUMNS).fill('');
 // Create header row
 let r1 = [...emptyRow];
 r1[TASK_COLUMN_INDEX] = 'task';
-//r1[1] = 'frequency';
 r1[r1.length - 1] = `${monthString.slice(0, 3)} ${year.slice(-2)}`;
 
 // Create rows for date and day
@@ -56,22 +55,12 @@ const checklistData = JSON.parse(fs.readFileSync(jsonData, 'utf8'));
 // Format checklist data
 let formattedChecklistData = [r1, [...emptyRow], r3, r4, [...emptyRow]];
 
-checklistData.tasks.forEach((category) => {
-  let categoryRow = [...emptyRow];
-//  categoryRow[0] = category.categoryName;
-  formattedChecklistData.push(categoryRow);
-
-  category.tasks.forEach((task) => {
-    if (!task.when.length || task.when.includes(monthString)) {
-      let taskRow = [...emptyRow];
-      taskRow[TASK_COLUMN_INDEX] = task.title;
-//      taskRow[1] = task.frequency;
-      formattedChecklistData.push(taskRow);
-    }
-  });
-
-  // Add empty row after each category
-  formattedChecklistData.push([...emptyRow]);
+checklistData.tasks.forEach((task) => {
+  if (!task.when.length || task.when.includes(monthString)) {
+    let taskRow = [...emptyRow];
+    taskRow[TASK_COLUMN_INDEX] = task.title;
+    formattedChecklistData.push(taskRow);
+  }
 });
 
 // Convert to CSV and output
