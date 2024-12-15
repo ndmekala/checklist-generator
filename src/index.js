@@ -73,12 +73,12 @@ const html = `
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-  <table>${formattedChecklistData.map((row, index) => {
-  return '<tr>' + row.map((cell) => {
+  <table class="text-xs">${formattedChecklistData.map((row, index) => {
+  return '<tr>' + row.map((cell, columnIdx) => {
     if (index === 0) {
-      return '<th class="p-4">' + cell + '</th>'
+      return '<th class="">' + cell + '*' + '</th>'
     } else {
-      return '<td class="p-4 text-fuchsia-500">' + cell + '</td>'
+      return '<td class="text-fuchsia-500">' + cell + '*' + '</td>'
     }
   }).join('') + '</tr>'
 }).join('')}</table>
