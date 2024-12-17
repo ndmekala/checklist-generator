@@ -63,6 +63,21 @@ checklistData.tasks.forEach((task) => {
   }
 });
 
+const el = (element, inner, classes) => {
+  return `<${element} class="${classes}">${inner}</${element}>`
+}
+
+const cellContents = (cellText, rowIdx, columnIdx) => {
+  if (cellText) {
+    return cellText
+  }
+
+  if (rowIdx > 2 && columnIdx > 2) {
+    return '*'
+  }
+
+  return ''
+}
 
 
 const html = `
@@ -74,13 +89,16 @@ const html = `
 </head>
 <body>
   <table class="text-xs">${formattedChecklistData.map((row, index) => {
-  return '<tr>' + row.map((cell, columnIdx) => {
-    if (index === 0) {
-      return '<th class="">' + cell + '*' + '</th>'
-    } else {
-      return '<td class="text-fuchsia-500">' + cell + '*' + '</td>'
-    }
-  }).join('') + '</tr>'
+  const cellElements = row.map((cell, columnIdx) => {
+    cell = cell.toString()
+    return el(
+      index === 0 ? 'th' : 'td',
+      cellContents(cell, index, columnIdx),
+      index === 0 ? '' : 'text-red-500'
+    )
+  }).join('')
+  const rowEl = el('tr', cellElements)
+  return rowEl
 }).join('')}</table>
 </body>
 </html>`
