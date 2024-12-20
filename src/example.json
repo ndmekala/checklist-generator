@@ -5,6 +5,18 @@
        "when": []
      },
      {
+       "title": "schmaily review",
+       "when": []
+     },
+     {
+       "title": "bailey review",
+       "when": []
+     },
+     {
+       "title": "heyyyyley review",
+       "when": []
+     },
+     {
        "title": "weekly review",
        "when": ["october", "may"]
      }

@@ -64,16 +64,16 @@ checklistData.tasks.forEach((task) => {
 });
 
 const el = (element, inner, classes) => {
-  return `<${element} class="${classes}">${inner}</${element}>`
+  return `<${element} class="${classes ?? ''}">${inner}</${element}>`
 }
 
-const cellContents = (cellText, rowIdx, columnIdx) => {
+const cellContents = (cellText, rowIdx, columnIdx, rowLength) => {
   if (cellText) {
     return cellText
   }
 
-  if (rowIdx > 2 && columnIdx > 2) {
-    return '*'
+  if (rowIdx > 4 && columnIdx > 1 && columnIdx < rowLength - 2) {
+    return el('div', '&#8226', 'text-center')
   }
 
   return ''
@@ -84,7 +84,7 @@ const html = `
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Page Title</title>
+  <title>Checklist</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
@@ -93,8 +93,8 @@ const html = `
     cell = cell.toString()
     return el(
       index === 0 ? 'th' : 'td',
-      cellContents(cell, index, columnIdx),
-      index === 0 ? '' : 'text-red-500'
+      cellContents(cell, index, columnIdx, row.length),
+      index === 0 ? '' : 'text-center p-0.5'
     )
   }).join('')
   const rowEl = el('tr', cellElements)
