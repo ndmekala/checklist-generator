@@ -79,16 +79,11 @@ const cellContents = (cellText, rowIdx, columnIdx, rowLength) => {
   return ''
 }
 
+const title = el('title', 'Checklist')
+const tailwindScript = '<script src="https://cdn.tailwindcss.com"></script>'
+const head = el('head', [title, tailwindScript].join(''))
 
-const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Checklist</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body>
-  <table class="text-xs">${formattedChecklistData.map((row, index) => {
+const innerTable = formattedChecklistData.map((row, index) => {
   const cellElements = row.map((cell, columnIdx) => {
     cell = cell.toString()
     return el(
@@ -99,11 +94,15 @@ const html = `
   }).join('')
   const rowEl = el('tr', cellElements)
   return rowEl
-}).join('')}</table>
-</body>
-</html>`
+}).join('')
+const table = el('table', innerTable, 'text-xs border border-black m-2')
+const body = el('body', table)
+const htmlTag = el('html', [head, body].join(''))
 
-
+const html = `
+<!DOCTYPE html>
+${htmlTag}
+`
 console.log(html)
 
 // Convert to CSV and output
