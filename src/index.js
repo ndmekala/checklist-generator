@@ -1,6 +1,21 @@
 const { stringify } = require('csv-stringify');
 const fs = require('fs');
 
+const el = (element, inner, classes) => {
+  const classAttribute = classes ? ` class="${classes}"` : ''
+  return `<${element}${classAttribute}>${inner}</${element}>`
+}
+
+const cellContents = (cellText, rowIdx, columnIdx, rowLength) => {
+  if (cellText) {
+    return cellText
+  }
+  if (rowIdx > 4 && columnIdx > 1 && columnIdx < rowLength - 2) {
+    return el('div', '&#8226', 'text-center')
+  }
+  return ''
+}
+
 function main() {
   // Parse command line arguments
   const generationDateArg = process.argv[2]
@@ -17,6 +32,7 @@ function main() {
   const year = generationDate.getFullYear().toString();
   const monthString = generationDate.toLocaleString('en-US', { month: 'long' }).toLowerCase()
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+
   // Generate dates and corresponding day names
   const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
   const datesAndDays = Array.from({ length: daysInMonth }, (_, day) => {
@@ -28,18 +44,19 @@ function main() {
     };
   });
   
+  // TODO build array function…?
   const NON_DATE_COLUMNS = 4 // task, empty, empty, date/empty
   const TASK_COLUMN_INDEX = 0 // first item
   const DATE_COLUMN_L_SPACING = 2 // task, empty
-  
+
   // Prepare the empty row for CSV
   let emptyRow = Array(daysInMonth + NON_DATE_COLUMNS).fill('');
-  
+
   // Create header row
   let r1 = [...emptyRow];
   r1[TASK_COLUMN_INDEX] = 'task';
   r1[r1.length - 1] = `${monthString.slice(0, 3)} ${year.slice(-2)}`;
-  
+
   // Create rows for date and day
   let r3 = [...emptyRow];
   let r4 = [...emptyRow];
@@ -47,14 +64,11 @@ function main() {
     r3[i + DATE_COLUMN_L_SPACING] = dateInfo.date;
     r4[i + DATE_COLUMN_L_SPACING] = dateInfo.day;
   });
-  
-  
+
   // Read checklist data from JSON
   const checklistData = JSON.parse(fs.readFileSync(jsonData, 'utf8'));
-  
   // Format checklist data
   let formattedChecklistData = [r1, [...emptyRow], r3, r4, [...emptyRow]];
-  
   checklistData.tasks.forEach((task) => {
     if (!task.when.length || task.when.includes(monthString)) {
       let taskRow = [...emptyRow];
@@ -62,28 +76,13 @@ function main() {
       formattedChecklistData.push(taskRow);
     }
   });
-  
-  const el = (element, inner, classes) => {
-    const classAttribute = classes ? ` class="${classes}"` : ''
-    return `<${element}${classAttribute}>${inner}</${element}>`
-  }
-  
-  const cellContents = (cellText, rowIdx, columnIdx, rowLength) => {
-    if (cellText) {
-      return cellText
-    }
-  
-    if (rowIdx > 4 && columnIdx > 1 && columnIdx < rowLength - 2) {
-      return el('div', '&#8226', 'text-center')
-    }
-  
-    return ''
-  }
-  
+
+  // TODO Roll into "build html/table" fn
+
   const title = el('title', 'Checklist')
   const tailwindScript = '<script src="https://cdn.tailwindcss.com"></script>'
   const head = el('head', [title, tailwindScript].join(''))
-  
+
   const innerTable = formattedChecklistData.map((row, index) => {
     const cellElements = row.map((cell, columnIdx) => {
       cell = cell.toString()
