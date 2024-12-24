@@ -16,13 +16,18 @@ const cellContents = (cellText, rowIdx, columnIdx, rowLength) => {
   return ''
 }
 
+const errorMessages = {
+  missingArgs: 'missing arguments'
+}
+
 const parseArguments = () => {
   const checklistDateArg = process.argv[2];
-  const config = process.argv[3];
-  if (!checklistDateArg || !config) {
+  const configPath = process.argv[3];
+  if (!checklistDateArg || !configPath) {
     console.log('Usage: checklist-generator <YYYY-MM-DD> </path/to/json>');
-    throw new Error('missing arguments');
+    throw new Error(errorMessages.missingArgs);
   }
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   return { checklistDateArg, config }
 }
 
@@ -75,8 +80,8 @@ const main = () => {
   const checklistDate = new Date(checklistDateArg)
 
   // Generate dates and corresponding day names
-  const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
-  const datesAndDays = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
+  const columnData = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
+    const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
     const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
     const dayOfWeek = date.getDay();
     return {
@@ -101,16 +106,15 @@ const main = () => {
   // Create rows for date and day
   let r3 = [...emptyRow];
   let r4 = [...emptyRow];
-  datesAndDays.forEach((dateInfo, i) => {
+  columnData.forEach((dateInfo, i) => {
     r3[i + DATE_COLUMN_L_SPACING] = dateInfo.date;
     r4[i + DATE_COLUMN_L_SPACING] = dateInfo.day;
   });
 
   // Read checklist data from JSON
-  const checklistData = JSON.parse(fs.readFileSync(config, 'utf8'));
   // Format checklist data
   let formattedChecklistData = [r1, [...emptyRow], r3, r4, [...emptyRow]];
-  checklistData.tasks.forEach((task) => {
+  config.tasks.forEach((task) => {
     if (!task.when.length || task.when.includes(dateUtils.monthString(checklistDate))) {
       let taskRow = [...emptyRow];
       taskRow[TASK_COLUMN_INDEX] = task.title;
@@ -126,5 +130,8 @@ const main = () => {
 try {
   main()
 } catch (e) {
+  if (e.message !== errorMessages.missingArgs) {
+    console.error(e.message)
+  }
   process.exit(1);
 }
