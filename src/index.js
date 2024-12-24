@@ -31,8 +31,50 @@ const parseArguments = () => {
   return { checklistDateArg, config }
 }
 
-const buildFormattedChecklistData = () => {
+const buildColumnData = (checklistDate) => {
+  const columnData = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
+    const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
+    const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
+    const dayOfWeek = date.getDay();
+    return {
+      date: day + 1,
+      day: daysOfWeek[dayOfWeek],
+    };
+  });
+  return columnData
+}
 
+const buildFormattedChecklistData = (checklistDate, columnData, config) => {
+  const NON_DATE_COLUMNS = 4 // task, empty, empty, date/empty
+  const TASK_COLUMN_INDEX = 0 // first item
+  const DATE_COLUMN_L_SPACING = 2 // task, empty
+
+  // Prepare the empty row for CSV
+  let emptyRow = Array(dateUtils.daysInMonth(checklistDate) + NON_DATE_COLUMNS).fill('');
+
+  // Create header row
+  let r1 = [...emptyRow];
+  r1[TASK_COLUMN_INDEX] = 'task';
+  r1[r1.length - 1] = `${dateUtils.monthString(checklistDate).slice(0, 3)} ${dateUtils.yearString(checklistDate).slice(-2)}`;
+
+  // Create rows for date and day
+  let r3 = [...emptyRow];
+  let r4 = [...emptyRow];
+  columnData.forEach((dateInfo, i) => {
+    r3[i + DATE_COLUMN_L_SPACING] = dateInfo.date;
+    r4[i + DATE_COLUMN_L_SPACING] = dateInfo.day;
+  });
+
+  // Format checklist data
+  let formattedChecklistData = [r1, [...emptyRow], r3, r4, [...emptyRow]];
+  config.tasks.forEach((task) => {
+    if (!task.when.length || task.when.includes(dateUtils.monthString(checklistDate))) {
+      let taskRow = [...emptyRow];
+      taskRow[TASK_COLUMN_INDEX] = task.title;
+      formattedChecklistData.push(taskRow);
+    }
+  });
+  return formattedChecklistData
 }
 
 const buildHtml = (formattedChecklistData) => {
@@ -76,52 +118,9 @@ const dateUtils = {
 
 const main = () => {
   const { checklistDateArg, config } = parseArguments()
-
   const checklistDate = new Date(checklistDateArg)
-
-  // Generate dates and corresponding day names
-  const columnData = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
-    const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
-    const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
-    const dayOfWeek = date.getDay();
-    return {
-      date: day + 1,
-      day: daysOfWeek[dayOfWeek],
-    };
-  });
-
-  // TODO build array function…?
-  const NON_DATE_COLUMNS = 4 // task, empty, empty, date/empty
-  const TASK_COLUMN_INDEX = 0 // first item
-  const DATE_COLUMN_L_SPACING = 2 // task, empty
-
-  // Prepare the empty row for CSV
-  let emptyRow = Array(dateUtils.daysInMonth(checklistDate) + NON_DATE_COLUMNS).fill('');
-
-  // Create header row
-  let r1 = [...emptyRow];
-  r1[TASK_COLUMN_INDEX] = 'task';
-  r1[r1.length - 1] = `${dateUtils.monthString(checklistDate).slice(0, 3)} ${dateUtils.yearString(checklistDate).slice(-2)}`;
-
-  // Create rows for date and day
-  let r3 = [...emptyRow];
-  let r4 = [...emptyRow];
-  columnData.forEach((dateInfo, i) => {
-    r3[i + DATE_COLUMN_L_SPACING] = dateInfo.date;
-    r4[i + DATE_COLUMN_L_SPACING] = dateInfo.day;
-  });
-
-  // Read checklist data from JSON
-  // Format checklist data
-  let formattedChecklistData = [r1, [...emptyRow], r3, r4, [...emptyRow]];
-  config.tasks.forEach((task) => {
-    if (!task.when.length || task.when.includes(dateUtils.monthString(checklistDate))) {
-      let taskRow = [...emptyRow];
-      taskRow[TASK_COLUMN_INDEX] = task.title;
-      formattedChecklistData.push(taskRow);
-    }
-  });
-
+  const columnData = buildColumnData(checklistDate)
+  const formattedChecklistData = buildFormattedChecklistData(checklistDate, columnData, config)
   const html = buildHtml(formattedChecklistData)
   console.log(html)
 }
