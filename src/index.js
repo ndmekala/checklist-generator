@@ -72,15 +72,12 @@ const dateUtils = {
 const main = () => {
   const { checklistDateArg, config } = parseArguments()
 
-  // Prepare date constants
   const checklistDate = new Date(checklistDateArg)
-  const month = checklistDate.getMonth();
-  const year = checklistDate.getFullYear().toString();
 
   // Generate dates and corresponding day names
   const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
   const datesAndDays = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
-    const date = new Date(year, month, day + 1);
+    const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
     const dayOfWeek = date.getDay();
     return {
       date: day + 1,
