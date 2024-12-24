@@ -26,6 +26,49 @@ const parseArguments = () => {
   return { checklistDateArg, config }
 }
 
+const buildFormattedChecklistData = () => {
+
+}
+
+const buildHtml = (formattedChecklistData) => {
+  const title = el('title', 'Checklist')
+  const tailwindScript = '<script src="https://cdn.tailwindcss.com"></script>'
+  const head = el('head', [title, tailwindScript].join(''))
+  const innerTable = formattedChecklistData.map((row, index) => {
+    const cellElements = row.map((cell, columnIdx) => {
+      cell = cell.toString()
+      return el(
+        index === 0 ? 'th' : 'td',
+        cellContents(cell, index, columnIdx, row.length),
+        index === 0 ? '' : 'text-center p-0.5'
+      )
+    }).join('')
+    const rowEl = el('tr', cellElements)
+    return rowEl
+  }).join('')
+  const table = el('table', innerTable, 'text-xs border border-black m-2')
+  const body = el('body', table)
+  const htmlTag = el('html', [head, body].join(''))
+  
+  const html = `
+<!DOCTYPE html>
+${htmlTag}
+  `
+  return html
+}
+
+const dateUtils = {
+  yearString: (date) => {
+    return date.getFullYear().toString();
+  },
+  monthString: (date) => {
+    return date.toLocaleString('en-US', { month: 'long' }).toLowerCase()
+  },
+  daysInMonth: (date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
+  }
+}
+
 const main = () => {
   const { checklistDateArg, config } = parseArguments()
 
@@ -46,7 +89,7 @@ const main = () => {
       day: daysOfWeek[dayOfWeek],
     };
   });
-  
+
   // TODO build array function…?
   const NON_DATE_COLUMNS = 4 // task, empty, empty, date/empty
   const TASK_COLUMN_INDEX = 0 // first item
@@ -80,32 +123,7 @@ const main = () => {
     }
   });
 
-  // TODO Roll into "build html/table" fn
-
-  const title = el('title', 'Checklist')
-  const tailwindScript = '<script src="https://cdn.tailwindcss.com"></script>'
-  const head = el('head', [title, tailwindScript].join(''))
-
-  const innerTable = formattedChecklistData.map((row, index) => {
-    const cellElements = row.map((cell, columnIdx) => {
-      cell = cell.toString()
-      return el(
-        index === 0 ? 'th' : 'td',
-        cellContents(cell, index, columnIdx, row.length),
-        index === 0 ? '' : 'text-center p-0.5'
-      )
-    }).join('')
-    const rowEl = el('tr', cellElements)
-    return rowEl
-  }).join('')
-  const table = el('table', innerTable, 'text-xs border border-black m-2')
-  const body = el('body', table)
-  const htmlTag = el('html', [head, body].join(''))
-  
-  const html = `
-<!DOCTYPE html>
-${htmlTag}
-  `
+  const html = buildHtml(formattedChecklistData)
   console.log(html)
 }
 
