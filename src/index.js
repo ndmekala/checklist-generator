@@ -16,21 +16,24 @@ const cellContents = (cellText, rowIdx, columnIdx, rowLength) => {
   return ''
 }
 
-function main() {
-  // Parse command line arguments
-  const generationDateArg = process.argv[2]
-  const jsonData = process.argv[3];
-
-  if (!generationDateArg || !jsonData) {
+const parseArguments = () => {
+  const checklistDateArg = process.argv[2];
+  const config = process.argv[3];
+  if (!checklistDateArg || !config) {
     console.log('Usage: checklist-generator <YYYY-MM-DD> </path/to/json>');
     throw new Error('missing arguments');
   }
+  return { checklistDateArg, config }
+}
+
+const main = () => {
+  const { checklistDateArg, config } = parseArguments()
 
   // Prepare date constants
-  const generationDate = new Date(generationDateArg)
-  const month = generationDate.getMonth();
-  const year = generationDate.getFullYear().toString();
-  const monthString = generationDate.toLocaleString('en-US', { month: 'long' }).toLowerCase()
+  const checklistDate = new Date(checklistDateArg)
+  const month = checklistDate.getMonth();
+  const year = checklistDate.getFullYear().toString();
+  const monthString = checklistDate.toLocaleString('en-US', { month: 'long' }).toLowerCase()
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   // Generate dates and corresponding day names
@@ -66,7 +69,7 @@ function main() {
   });
 
   // Read checklist data from JSON
-  const checklistData = JSON.parse(fs.readFileSync(jsonData, 'utf8'));
+  const checklistData = JSON.parse(fs.readFileSync(config, 'utf8'));
   // Format checklist data
   let formattedChecklistData = [r1, [...emptyRow], r3, r4, [...emptyRow]];
   checklistData.tasks.forEach((task) => {
@@ -110,6 +113,5 @@ ${htmlTag}
 try {
   main()
 } catch (e) {
-  console.error(e)
   process.exit(1);
 }
