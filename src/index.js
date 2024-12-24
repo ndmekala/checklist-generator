@@ -31,7 +31,8 @@ const parseArguments = () => {
   return { checklistDateArg, config }
 }
 
-const buildColumnData = (checklistDate) => {
+const buildColumnData = (checklistDate, config) => {
+  console.log(config.taskFrequency)
   const columnData = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
     const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
     const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
@@ -115,7 +116,7 @@ const dateUtils = {
 const main = () => {
   const { checklistDateArg, config } = parseArguments()
   const checklistDate = new Date(checklistDateArg)
-  const columnData = buildColumnData(checklistDate)
+  const columnData = buildColumnData(checklistDate, config)
   const formattedChecklistData = buildFormattedChecklistData(checklistDate, columnData, config)
   const html = buildHtml(formattedChecklistData)
   console.log(html)

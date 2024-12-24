@@ -1,19 +1,20 @@
 {
+  "taskFrequency": "weekly",
   "tasks": [
      {
-       "title": "daily review",
+       "title": "task 1",
        "when": []
      },
      {
-       "title": "schmaily review",
+       "title": "task 2",
        "when": []
      },
      {
-       "title": "bailey review",
+       "title": "task 3",
        "when": []
      },
      {
-       "title": "heyyyyley review",
+       "title": "task 4",
        "when": []
      },
      {
