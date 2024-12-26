@@ -33,15 +33,56 @@ const parseArguments = () => {
 
 const buildColumnData = (checklistDate, config) => {
   console.log(config.taskFrequency)
-  const columnData = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
-    const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
-    const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
-    const dayOfWeek = date.getDay();
-    return {
-      date: day + 1,
-      day: daysOfWeek[dayOfWeek],
-    };
-  });
+
+  let columnData
+
+  switch (config.taskFrequency) {
+    case 'weekly':
+      const saturdays = [];
+      const startDate = new Date(checklistDate.getFullYear(), checklistDate.getMonth(), 1);
+      const endDate = new Date(checklistDate.getFullYear(), checklistDate.getMonth() + 1, 0); // last day of the month
+      const weeks = [];
+      let currentWeek = [];
+
+      // Loop through each day in the month
+      for (let day = startDate.getDate(); day <= endDate.getDate(); day++) {
+        const date = new Date(checklistDate.getFullYear(), checklistDate.getMonth(), day);
+
+        // Check if the current day is a Saturday (getDay() == 6)
+        if (date.getDay() === 6) {
+          saturdays.push(date);
+        }
+      }
+
+      // Now group the Saturdays into weeks and format them
+      saturdays.forEach((saturday, index) => {
+        const startSaturday = saturday;
+        const endSaturday = new Date(saturday);
+        endSaturday.setDate(saturday.getDate() + 6); // The Friday of the same week
+        // Format the date as 'S MM/DD - F MM/DD'
+        const startDateFormatted = `${startSaturday.getMonth() + 1}/${startSaturday.getDate()}`;
+        const endDateFormatted = `${endSaturday.getMonth() + 1}/${endSaturday.getDate()}`;
+        // Push the week info with 'week X'
+        weeks.push({
+          date: `S ${startDateFormatted} - F ${endDateFormatted}`,
+          day: `week ${index + 1}`,
+        });
+      });
+
+      columnData = weeks; // Store the resulting weeks into columnData
+      break;
+    case 'daily':
+      columnData = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
+        const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
+        const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
+        const dayOfWeek = date.getDay();
+        return {
+          date: day + 1,
+          day: daysOfWeek[dayOfWeek],
+        };
+      });
+    default:
+  }
   return columnData
 }
 
