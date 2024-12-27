@@ -31,11 +31,8 @@ const parseArguments = () => {
   return { checklistDateArg, config }
 }
 
-const buildColumnData = (checklistDate, config) => {
-  console.log(config.taskFrequency)
-
-  let columnData
-
+const buildColumnLabels = (checklistDate, config) => {
+  let columnLabels
   switch (config.taskFrequency) {
     case 'weekly':
       const saturdays = [];
@@ -43,17 +40,14 @@ const buildColumnData = (checklistDate, config) => {
       const endDate = new Date(checklistDate.getFullYear(), checklistDate.getMonth() + 1, 0); // last day of the month
       const weeks = [];
       let currentWeek = [];
-
       // Loop through each day in the month
       for (let day = startDate.getDate(); day <= endDate.getDate(); day++) {
         const date = new Date(checklistDate.getFullYear(), checklistDate.getMonth(), day);
-
         // Check if the current day is a Saturday (getDay() == 6)
         if (date.getDay() === 6) {
           saturdays.push(date);
         }
       }
-
       // Now group the Saturdays into weeks and format them
       saturdays.forEach((saturday, index) => {
         const startSaturday = saturday;
@@ -64,34 +58,33 @@ const buildColumnData = (checklistDate, config) => {
         const endDateFormatted = `${endSaturday.getMonth() + 1}/${endSaturday.getDate()}`;
         // Push the week info with 'week X'
         weeks.push({
-          date: `S ${startDateFormatted} - F ${endDateFormatted}`,
-          day: `week ${index + 1}`,
+          label1: `S ${startDateFormatted} - F ${endDateFormatted}`,
+          label2: `week ${index + 1}`,
         });
       });
-
-      columnData = weeks; // Store the resulting weeks into columnData
+      columnLabels = weeks; // Store the resulting weeks into columnLabels
       break;
     case 'daily':
-      columnData = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
+      columnLabels = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
         const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
         const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
         const dayOfWeek = date.getDay();
         return {
-          date: day + 1,
-          day: daysOfWeek[dayOfWeek],
+          label1: day + 1,
+          label2: daysOfWeek[dayOfWeek],
         };
       });
     default:
   }
-  return columnData
+  return columnLabels
 }
 
-const buildFormattedChecklistData = (checklistDate, columnData, config) => {
+const buildChecklistArray = (checklistDate, columnLabels, config) => {
   const NON_DATE_COLUMNS = 4 // task, empty, empty, date/empty
   const TASK_COLUMN_INDEX = 0 // first item
   const DATE_COLUMN_L_SPACING = 2 // task, empty
   // Prepare the empty row for CSV
-  let emptyRow = Array(dateUtils.daysInMonth(checklistDate) + NON_DATE_COLUMNS).fill('');
+  let emptyRow = Array(columnLabels.length + NON_DATE_COLUMNS).fill('');
   // Create header row
   let r1 = [...emptyRow];
   r1[TASK_COLUMN_INDEX] = 'task';
@@ -99,39 +92,39 @@ const buildFormattedChecklistData = (checklistDate, columnData, config) => {
   // Create rows for date and day
   let r3 = [...emptyRow];
   let r4 = [...emptyRow];
-  columnData.forEach((dateInfo, i) => {
-    r3[i + DATE_COLUMN_L_SPACING] = dateInfo.date;
-    r4[i + DATE_COLUMN_L_SPACING] = dateInfo.day;
+  columnLabels.forEach((dateInfo, i) => {
+    r3[i + DATE_COLUMN_L_SPACING] = dateInfo.label1;
+    r4[i + DATE_COLUMN_L_SPACING] = dateInfo.label2;
   });
   // Build checklist array
-  let formattedChecklistData = [r1, [...emptyRow], r3, r4, [...emptyRow]];
+  let checklistArray = [r1, [...emptyRow], r3, r4, [...emptyRow]];
   config.tasks.forEach((task) => {
     if (!task.when.length || task.when.includes(dateUtils.monthString(checklistDate))) {
       let taskRow = [...emptyRow];
       taskRow[TASK_COLUMN_INDEX] = task.title;
-      formattedChecklistData.push(taskRow);
+      checklistArray.push(taskRow);
     }
   });
-  return formattedChecklistData
+  return checklistArray
 }
 
-const buildHtml = (formattedChecklistData) => {
+const buildHtml = (checklistArray) => {
   const title = el('title', 'Checklist')
   const tailwindScript = '<script src="https://cdn.tailwindcss.com"></script>'
   const head = el('head', [title, tailwindScript].join(''))
-  const innerTable = formattedChecklistData.map((row, index) => {
+  const innerTable = checklistArray.map((row, index) => {
     const cellElements = row.map((cell, columnIdx) => {
       cell = cell.toString()
       return el(
         index === 0 ? 'th' : 'td',
         cellContents(cell, index, columnIdx, row.length),
-        index === 0 ? '' : 'text-center p-0.5'
+        `${index === 0 ? '' : 'text-center p-0.5'} border border-neutral-200`
       )
     }).join('')
     const rowEl = el('tr', cellElements)
     return rowEl
   }).join('')
-  const table = el('table', innerTable, 'text-xs border border-black m-2')
+  const table = el('table', innerTable, 'text-xs box-border m-2')
   const body = el('body', table)
   const htmlTag = el('html', [head, body].join(''))
   
@@ -157,9 +150,9 @@ const dateUtils = {
 const main = () => {
   const { checklistDateArg, config } = parseArguments()
   const checklistDate = new Date(checklistDateArg)
-  const columnData = buildColumnData(checklistDate, config)
-  const formattedChecklistData = buildFormattedChecklistData(checklistDate, columnData, config)
-  const html = buildHtml(formattedChecklistData)
+  const columnLabels = buildColumnLabels(checklistDate, config)
+  const checklistArray = buildChecklistArray(checklistDate, columnLabels, config)
+  const html = buildHtml(checklistArray)
   console.log(html)
 }
 
