@@ -153,7 +153,7 @@ const main = () => {
   const columnLabels = buildColumnLabels(checklistDate, config)
   const checklistArray = buildChecklistArray(checklistDate, columnLabels, config)
   const html = buildHtml(checklistArray)
-  console.log(html)
+  process.stdout.write(html)
 }
 
 
