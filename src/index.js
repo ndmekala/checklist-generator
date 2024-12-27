@@ -65,6 +65,7 @@ const buildColumnLabels = (checklistDate, config) => {
       columnLabels = weeks; // Store the resulting weeks into columnLabels
       break;
     case 'daily':
+    default:
       columnLabels = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
         const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
         const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
@@ -74,7 +75,6 @@ const buildColumnLabels = (checklistDate, config) => {
           label2: daysOfWeek[dayOfWeek],
         };
       });
-    default:
   }
   return columnLabels
 }
@@ -140,7 +140,7 @@ const dateUtils = {
     return date.getFullYear().toString();
   },
   monthString: (date) => {
-    return date.toLocaleString('en-US', { month: 'long' }).toLowerCase()
+    return date.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase()
   },
   daysInMonth: (date) => {
     return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
