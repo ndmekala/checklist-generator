@@ -1,0 +1,25 @@
+{
+  "taskFrequency": "weekly",
+  "tasks": [
+     {
+       "title": "task 1",
+       "when": []
+     },
+     {
+       "title": "task 2",
+       "when": []
+     },
+     {
+       "title": "task 3",
+       "when": []
+     },
+     {
+       "title": "task 4",
+       "when": []
+     },
+     {
+       "title": "weekly review",
+       "when": ["october", "may"]
+     }
+  ]
+}

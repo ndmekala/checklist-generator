@@ -1,138 +1,167 @@
 const { stringify } = require('csv-stringify');
 const fs = require('fs');
 
-// TODO rename vars ... lots of ugly names
-
-function isLeapYear(year) {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+const el = (element, inner, classes) => {
+  const classAttribute = classes ? ` class="${classes}"` : ''
+  return `<${element}${classAttribute}>${inner}</${element}>`
 }
 
-function getDaysInMonth(year, month) {
-  // Months are 0-based in JavaScript, so January is 0, February is 1, and so on.
-  const daysInMonth = [
-    31,
-    isLeapYear(year) ? 29 : 28,
-    31,
-    30,
-    31,
-    30,
-    31,
-    31,
-    30,
-    31,
-    30,
-    31,
-  ];
-
-  return daysInMonth[month];
-}
-
-function generateMonthDatesAndDays(month, year, daysInMonth) {
-  const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
-
-  const dateObjects = [];
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    const dayOfWeek = date.getDay(); // 0 (Sunday) to 6 (Saturday)
-    const dayName = daysOfWeek[dayOfWeek];
-
-    dateObjects.push({
-      date: day,
-      day: dayName,
-    });
+const cellContents = (cellText, rowIdx, columnIdx, rowLength) => {
+  if (cellText) {
+    return cellText
   }
-
-  return dateObjects;
-}
-
-const monthString = process.argv[2];
-const year = process.argv[3];
-const jsonData = process.argv[4];
-
-if (!monthString || !year || !jsonData) {
-  console.log('Usage: checklist-generator <month> <year> </path/to/json>');
-  process.exit(1);
-}
-
-const monthStringToNumber = (month) => {
-  switch (month) {
-    case 'january':
-      return 0;
-    case 'february':
-      return 1;
-    case 'march':
-      return 2;
-    case 'april':
-      return 3;
-    case 'may':
-      return 4;
-    case 'june':
-      return 5;
-    case 'july':
-      return 6;
-    case 'august':
-      return 7;
-    case 'september':
-      return 8;
-    case 'october':
-      return 9;
-    case 'november':
-      return 10;
-    case 'december':
-      return 11;
+  if (rowIdx > 4 && columnIdx > 1 && columnIdx < rowLength - 2) {
+    return el('div', '&#8226', 'text-center')
   }
-};
-
-const month = monthStringToNumber(monthString);
-const daysInMonth = getDaysInMonth(year, month);
-const datesAndDays = generateMonthDatesAndDays(month, year, daysInMonth);
-
-let emptyRow = [];
-
-// n + 5 columns where n is # of days in month
-for (let i = 0; i < daysInMonth + 5; i++) {
-  emptyRow.push('');
+  return ''
 }
 
-// a header row
-let r1 = emptyRow.slice();
-r1[0] = 'task';
-r1[1] = 'frequency';
-r1[r1.length - 1] = monthString.slice(0, 3) + ' ' + year.toString().slice(2);
-
-let r2 = emptyRow.slice();
-
-// rows with date and day of week
-let r3 = emptyRow.slice();
-let r4 = emptyRow.slice();
-for (let i = 0; i < daysInMonth; i++) {
-  r3[i + 3] = datesAndDays[i].date;
-  r4[i + 3] = datesAndDays[i].day;
+const errorMessages = {
+  missingArgs: 'missing arguments'
 }
 
-let r5 = emptyRow.slice();
+const parseArguments = () => {
+  const checklistDateArg = process.argv[2];
+  const configPath = process.argv[3];
+  if (!checklistDateArg || !configPath) {
+    console.log('Usage: checklist-generator <YYYY-MM> </path/to/json>');
+    throw new Error(errorMessages.missingArgs);
+  }
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  return { checklistDateArg, config }
+}
 
-const checklistData = JSON.parse(fs.readFileSync(jsonData, 'utf8'));
+const buildColumnLabels = (checklistDate, config) => {
+  let columnLabels
+  switch (config.taskFrequency) {
+    case 'weekly':
+      const saturdays = [];
+      const startDate = new Date(checklistDate.getFullYear(), checklistDate.getMonth(), 1);
+      const endDate = new Date(checklistDate.getFullYear(), checklistDate.getMonth() + 1, 0); // last day of the month
+      const weeks = [];
+      let currentWeek = [];
+      // Loop through each day in the month
+      for (let day = startDate.getDate(); day <= endDate.getDate(); day++) {
+        const date = new Date(checklistDate.getFullYear(), checklistDate.getMonth(), day);
+        // Check if the current day is a Saturday (getDay() == 6)
+        if (date.getDay() === 6) {
+          saturdays.push(date);
+        }
+      }
+      // Now group the Saturdays into weeks and format them
+      saturdays.forEach((saturday, index) => {
+        const startSaturday = saturday;
+        const endSaturday = new Date(saturday);
+        endSaturday.setDate(saturday.getDate() + 6); // The Friday of the same week
+        // Format the date as 'S MM/DD - F MM/DD'
+        const startDateFormatted = `${startSaturday.getMonth() + 1}/${startSaturday.getDate()}`;
+        const endDateFormatted = `${endSaturday.getMonth() + 1}/${endSaturday.getDate()}`;
+        // Push the week info with 'week X'
+        weeks.push({
+          label1: `S ${startDateFormatted} - F ${endDateFormatted}`,
+          label2: `week ${index + 1}`,
+        });
+      });
+      columnLabels = weeks; // Store the resulting weeks into columnLabels
+      break;
+    case 'daily':
+    default:
+      columnLabels = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
+        const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
+        const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
+        const dayOfWeek = date.getDay();
+        return {
+          label1: day + 1,
+          label2: daysOfWeek[dayOfWeek],
+        };
+      });
+  }
+  return columnLabels
+}
 
-// remaining rows from checklist json
-// TODO consider adding support for a list of month names in the json
-let formattedChecklistData = [r1, r2, r3, r4, r5];
-
-checklistData.tasks.forEach((category) => {
-  let categoryRow = emptyRow.slice();
-  categoryRow[0] = category.categoryName;
-
-  formattedChecklistData.push(categoryRow);
-  category.tasks.forEach((task) => {
-    if (!task.when.length || task.when.includes(monthString)) {
-      let taskRow = emptyRow.slice();
-      taskRow[0] = task.title;
-      taskRow[1] = task.frequency;
-      formattedChecklistData.push(taskRow);
+const buildChecklistArray = (checklistDate, columnLabels, config) => {
+  const NON_DATE_COLUMNS = 4 // task, empty, empty, date/empty
+  const TASK_COLUMN_INDEX = 0 // first item
+  const DATE_COLUMN_L_SPACING = 2 // task, empty
+  // Prepare the empty row for CSV
+  let emptyRow = Array(columnLabels.length + NON_DATE_COLUMNS).fill('');
+  // Create header row
+  let r1 = [...emptyRow];
+  r1[TASK_COLUMN_INDEX] = 'task';
+  r1[r1.length - 1] = `${dateUtils.monthString(checklistDate).slice(0, 3)} ${dateUtils.yearString(checklistDate).slice(-2)}`;
+  // Create rows for date and day
+  let r3 = [...emptyRow];
+  let r4 = [...emptyRow];
+  columnLabels.forEach((dateInfo, i) => {
+    r3[i + DATE_COLUMN_L_SPACING] = dateInfo.label1;
+    r4[i + DATE_COLUMN_L_SPACING] = dateInfo.label2;
+  });
+  // Build checklist array
+  let checklistArray = [r1, [...emptyRow], r3, r4, [...emptyRow]];
+  config.tasks.forEach((task) => {
+    if (!task.when.length || task.when.includes(dateUtils.monthString(checklistDate))) {
+      let taskRow = [...emptyRow];
+      taskRow[TASK_COLUMN_INDEX] = task.title;
+      checklistArray.push(taskRow);
     }
   });
-  formattedChecklistData.push(emptyRow.slice());
-});
+  return checklistArray
+}
 
-stringify(formattedChecklistData).pipe(process.stdout);
+const buildHtml = (checklistArray) => {
+  const title = el('title', 'Checklist')
+  const tailwindScript = '<script src="https://cdn.tailwindcss.com"></script>'
+  const head = el('head', [title, tailwindScript].join(''))
+  const innerTable = checklistArray.map((row, index) => {
+    const cellElements = row.map((cell, columnIdx) => {
+      cell = cell.toString()
+      return el(
+        index === 0 ? 'th' : 'td',
+        cellContents(cell, index, columnIdx, row.length),
+        `${index === 0 ? '' : 'text-center p-0.5'} border border-neutral-200`
+      )
+    }).join('')
+    const rowEl = el('tr', cellElements)
+    return rowEl
+  }).join('')
+  const table = el('table', innerTable, 'text-xs box-border m-2')
+  const body = el('body', table)
+  const htmlTag = el('html', [head, body].join(''))
+  
+  const html = `
+<!DOCTYPE html>
+${htmlTag}
+  `
+  return html
+}
+
+const dateUtils = {
+  yearString: (date) => {
+    return date.getFullYear().toString();
+  },
+  monthString: (date) => {
+    return date.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase()
+  },
+  daysInMonth: (date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
+  }
+}
+
+const main = () => {
+  const { checklistDateArg, config } = parseArguments()
+  const checklistDate = new Date(checklistDateArg)
+  const columnLabels = buildColumnLabels(checklistDate, config)
+  const checklistArray = buildChecklistArray(checklistDate, columnLabels, config)
+  const html = buildHtml(checklistArray)
+  process.stdout.write(html)
+}
+
+
+try {
+  main()
+} catch (e) {
+  if (e.message !== errorMessages.missingArgs) {
+    console.error(e.message)
+  }
+  process.exit(1);
+}
