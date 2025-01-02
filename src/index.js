@@ -36,13 +36,13 @@ const buildColumnLabels = (checklistDate, config) => {
   switch (config.taskFrequency) {
     case 'weekly':
       const saturdays = [];
-      const startDate = new Date(checklistDate.getFullYear(), checklistDate.getMonth(), 1);
-      const endDate = new Date(checklistDate.getFullYear(), checklistDate.getMonth() + 1, 0); // last day of the month
+      const startDate = new Date(checklistDate.getUTCFullYear(), checklistDate.getUTCMonth(), 1);
+      const endDate = new Date(checklistDate.getUTCFullYear(), checklistDate.getUTCMonth() + 1, 0); // last day of the month
       const weeks = [];
       let currentWeek = [];
       // Loop through each day in the month
       for (let day = startDate.getDate(); day <= endDate.getDate(); day++) {
-        const date = new Date(checklistDate.getFullYear(), checklistDate.getMonth(), day);
+        const date = new Date(checklistDate.getUTCFullYear(), checklistDate.getUTCMonth(), day);
         // Check if the current day is a Saturday (getDay() == 6)
         if (date.getDay() === 6) {
           saturdays.push(date);
@@ -54,8 +54,8 @@ const buildColumnLabels = (checklistDate, config) => {
         const endSaturday = new Date(saturday);
         endSaturday.setDate(saturday.getDate() + 6); // The Friday of the same week
         // Format the date as 'S MM/DD - F MM/DD'
-        const startDateFormatted = `${startSaturday.getMonth() + 1}/${startSaturday.getDate()}`;
-        const endDateFormatted = `${endSaturday.getMonth() + 1}/${endSaturday.getDate()}`;
+        const startDateFormatted = `${startSaturday.getUTCMonth() + 1}/${startSaturday.getDate()}`;
+        const endDateFormatted = `${endSaturday.getUTCMonth() + 1}/${endSaturday.getDate()}`;
         // Push the week info with 'week X'
         weeks.push({
           label1: `S ${startDateFormatted} - F ${endDateFormatted}`,
@@ -68,8 +68,8 @@ const buildColumnLabels = (checklistDate, config) => {
     default:
       columnLabels = Array.from({ length: dateUtils.daysInMonth(checklistDate) }, (_, day) => {
         const daysOfWeek = ['U', 'M', 'T', 'W', 'R', 'F', 'S'];
-        const date = new Date(checklistDate.getFullYear(), checklistDate.getFullYear(), day + 1);
-        const dayOfWeek = date.getDay();
+        const date = new Date(checklistDate.getUTCFullYear(), checklistDate.getUTCMonth(), day + 1);
+        const dayOfWeek = date.getUTCDay();
         return {
           label1: day + 1,
           label2: daysOfWeek[dayOfWeek],
@@ -137,13 +137,13 @@ ${htmlTag}
 
 const dateUtils = {
   yearString: (date) => {
-    return date.getFullYear().toString();
+    return date.getUTCFullYear().toString();
   },
   monthString: (date) => {
     return date.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase()
   },
   daysInMonth: (date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
+    return new Date(date.getUTCFullYear(), date.getUTCMonth() + 1, 0).getDate();
   }
 }
 
